@@ -2,7 +2,7 @@
 
 Docker environment and app for the Udemy course *Laravel + React: Build a Social Media App with Inertia*.
 
-Stack: Laravel 13, Breeze (React + Inertia), React 19, Vite 8, MySQL 8.
+Stack: Laravel 13, Breeze (React + Inertia), React 19, TypeScript 7, Vite 8, MySQL 8.
 
 ## What's inside
 
@@ -14,8 +14,6 @@ Stack: Laravel 13, Breeze (React + Inertia), React 19, Vite 8, MySQL 8.
 | `db`      | MySQL 8                               | localhost:3307          |
 | `mailpit` | Catches outgoing emails               | http://localhost:8025   |
 | `queue`   | Queue worker (optional, `make queue`) | -                       |
-
-Ports differ from `laravel-learning` (8000 / 3306), so both projects can run at the same time.
 
 DB credentials: database `laravel`, user `laravel`, password `secret` (root password `root`).
 These come from `docker-compose.yml` and override the database settings in `src/.env`.
@@ -48,6 +46,7 @@ make npm cmd="install some-package"
 make migrate / make migrate-fresh
 make vite-restart
 make logs
+make npm cmd="exec tsc"            # TypeScript type check
 ```
 
 ## How this project was set up (notes)
@@ -86,6 +85,32 @@ Breeze is older than Laravel 13, so a few fixes were needed afterwards:
    },
    ```
 4. **APP_URL.** Set `APP_URL=http://localhost:8080` in `src/.env` (the default `8000` breaks storage and email links).
+
+5. **Switch to TypeScript.** Breeze installs plain JavaScript (`.jsx`).
+   ```bash
+   make npm cmd="install -D typescript @types/react @types/react-dom"
+   ```
+   Rename the `.jsx` files in `src/resources/js` to `.tsx`, and change `.jsx` to `.tsx` in `vite.config.js` (`input`), `app.tsx` (the pages glob) and `resources/views/app.blade.php` (`@vite([...])`).
+   Replace `jsconfig.json` with a `tsconfig.json`. TypeScript 7 no longer accepts `baseUrl`, so paths must start with `./`:
+   ```json
+   {
+       "compilerOptions": {
+           "target": "ESNext",
+           "module": "ESNext",
+           "moduleResolution": "bundler",
+           "jsx": "react-jsx",
+           "strict": true,
+           "noEmit": true,
+           "skipLibCheck": true,
+           "isolatedModules": true,
+           "esModuleInterop": true,
+           "allowJs": true,
+           "paths": { "@/*": ["./resources/js/*"] },
+           "types": ["vite/client"]
+       },
+       "include": ["resources/js/**/*"]
+   }
+   ```
 
 Then `make vite-restart` and `make migrate`.
 
